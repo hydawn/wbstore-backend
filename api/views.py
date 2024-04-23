@@ -4,12 +4,12 @@ from http import HTTPStatus
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import JsonResponse
-from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import get_token
+
+from .decorators import login_required, allow_methods
 
 #from wbstorebackend.settings import DEBUG
 
@@ -50,13 +50,13 @@ class SignupAPI(View):
         return JsonResponse({'message': 'User created successfully'}, status=HTTPStatus.CREATED)
 
 
-@method_decorator(login_required, name='dispatch')
-class UserDetailAPI(View):
-    def get(self, request):
-        user = User.objects.get(username=request.user.username)
-        return JsonResponse(
-            {
-                'username': user.username,
-                'email': user.email,
-                'last_login': user.last_login,
-            })
+@login_required()
+@allow_methods(['GET'])
+def get_user_detail(request):
+    user = User.objects.get(username=request.user.username)
+    return JsonResponse(
+        {
+            'username': user.username,
+            'email': user.email,
+            'last_login': user.last_login,
+        })
