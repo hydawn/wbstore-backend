@@ -1,0 +1,6 @@
+from django.utils.decorators import decorator_from_middleware
+
+from .middleware import LoginRequiredMiddleware, AllowMethodsMiddleware
+
+login_required = decorator_from_middleware(LoginRequiredMiddleware)
+allow_methods = decorator_from_middleware(AllowMethodsMiddleware)
