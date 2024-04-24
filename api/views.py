@@ -61,6 +61,12 @@ def get_user_detail(request):
             'last_login': user.last_login,
         })
 
+
+def get_echo(_):
+    ''' simple echo '''
+    return HttpResponse(b'echo')
+
+
 @allow_methods(['GET'])
 def get_user_loggedin(request):
     if request.user and request.user.is_authenticated:
