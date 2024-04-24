@@ -3,7 +3,7 @@
 import json
 from http import HTTPStatus
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponse, JsonResponse
@@ -79,3 +79,10 @@ def get_user_loggedin(request):
     if request.user and request.user.is_authenticated:
         return JsonResponse({'status': 'ok', 'loggedin': True})
     return JsonResponse({'status': 'ok', 'loggedin': False})
+
+@allow_methods(['POST'])
+@login_required()
+def post_logout(request):
+    ''' log the user out '''
+    logout(request)
+    return JsonResponse({'status': 'ok'})
