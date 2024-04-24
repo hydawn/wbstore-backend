@@ -13,6 +13,7 @@ from django.views.decorators.csrf import get_token
 from .decorators import login_required, allow_methods
 
 from wbstorebackend.settings import DEBUG
+from .models import UserDetail
 
 
 class CsrfTokenAPI(View):
@@ -56,11 +57,14 @@ class SignupAPI(View):
         username = post_data.get('username')
         password = post_data.get('password')
         email = post_data.get('email')
-        if not (username and email and password):
-            return JsonResponse({'error': 'Username, password and email are required'}, status=HTTPStatus.BAD_REQUEST)
+        role = post_data.get('role')
+        if not (username and email and password and role):
+            return JsonResponse({'error': 'Username, password and email and role are required'}, status=HTTPStatus.BAD_REQUEST)
         if User.objects.filter(username=username).exists():
             return JsonResponse({'error': 'Username already exists'}, status=HTTPStatus.BAD_REQUEST)
-        User.objects.create_user(username=username, email=email, password=password)
+        new_user = User.objects.create_user(username=username, email=email, password=password)
+        user_detail = UserDetail(user=new_user, role_customer=role == 'customer', role_merchant=role == 'merchant')
+        user_detail.save()
         return JsonResponse({'message': 'User created successfully'}, status=HTTPStatus.CREATED)
 
 
