@@ -22,13 +22,14 @@ class CsrfTokenAPI(View):
 
 class LoginAPI(View):
     def post(self, request: WSGIRequest):
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        if not username and request.content_type == 'application/json':
-            # this is API version of post where data is in payload
-            # quite strange
-            username = json.loads(request.body).get('username')
-            password = json.loads(request.body).get('password')
+        if request.content_type != 'application/json':
+            return JsonResponse({'status': 'error', 'error': 'content_type must be application/json'}, status=HTTPStatus.BAD_REQUEST)
+        try:
+            post_data = json.loads(request.body)
+        except json.JSONDecodeError as jderror:
+            return JsonResponse({'status': 'error', 'error': f'JSONDecodeError: {jderror}'}, status=HTTPStatus.BAD_REQUEST)
+        username = post_data.get('username')
+        password = post_data.get('password')
         if DEBUG:
             print(f'got user [{username}] try to login')
         if request.user.is_authenticated:
@@ -46,11 +47,17 @@ class LoginAPI(View):
 
 class SignupAPI(View):
     def post(self, request):
-        username = request.data.get('username')
-        email = request.data.get('email')
-        password = request.data.get('password')
+        if request.content_type != 'application/json':
+            return JsonResponse({'status': 'error', 'error': 'content_type must be application/json'}, status=HTTPStatus.BAD_REQUEST)
+        try:
+            post_data = json.loads(request.body)
+        except json.JSONDecodeError as jderror:
+            return JsonResponse({'status': 'error', 'error': f'JSONDecodeError: {jderror}'}, status=HTTPStatus.BAD_REQUEST)
+        username = post_data.get('username')
+        password = post_data.get('password')
+        email = post_data.get('email')
         if not (username and email and password):
-            return JsonResponse({'error': 'Username and password are required'}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse({'error': 'Username, password and email are required'}, status=HTTPStatus.BAD_REQUEST)
         if User.objects.filter(username=username).exists():
             return JsonResponse({'error': 'Username already exists'}, status=HTTPStatus.BAD_REQUEST)
         User.objects.create_user(username=username, email=email, password=password)
