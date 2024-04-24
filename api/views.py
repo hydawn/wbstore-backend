@@ -1,17 +1,18 @@
 #from django.shortcuts import render
 
+import json
 from http import HTTPStatus
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.decorators.csrf import get_token
 
 from .decorators import login_required, allow_methods
 
-#from wbstorebackend.settings import DEBUG
+from wbstorebackend.settings import DEBUG
 
 
 class CsrfTokenAPI(View):
@@ -23,11 +24,17 @@ class LoginAPI(View):
     def post(self, request: WSGIRequest):
         username = request.POST.get('username')
         password = request.POST.get('password')
-        print(f'got user [{username}] try to login')
-        if not (username and password):
-            return JsonResponse({'error': 'Username or Password not provided or Empty'}, status=HTTPStatus.BAD_REQUEST)
+        if not username and request.content_type == 'application/json':
+            # this is API version of post where data is in payload
+            # quite strange
+            username = json.loads(request.body).get('username')
+            password = json.loads(request.body).get('password')
+        if DEBUG:
+            print(f'got user [{username}] try to login')
         if request.user.is_authenticated:
             return JsonResponse({'status': f'[{username}] already logged in'}, status=HTTPStatus.OK)
+        if not (username and password):
+            return JsonResponse({'error': f'Username [{username}] or Password [{password}] not provided or Empty'}, status=HTTPStatus.BAD_REQUEST)
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
