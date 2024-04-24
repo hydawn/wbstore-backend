@@ -6,4 +6,5 @@ urlpatterns = [
     path('signup/', SignupAPI.as_view()),
     path('get_csrf_token/', CsrfTokenAPI.as_view()),
     path('get_user_detail/', get_user_detail),
+    path('get_user_loggedin', get_user_loggedin),
 ]

@@ -60,3 +60,9 @@ def get_user_detail(request):
             'email': user.email,
             'last_login': user.last_login,
         })
+
+@allow_methods(['GET'])
+def get_user_loggedin(request):
+    if request.user and request.user.is_authenticated:
+        return JsonResponse({'status': 'ok', 'loggedin': True})
+    return JsonResponse({'status': 'ok', 'loggedin': False})
