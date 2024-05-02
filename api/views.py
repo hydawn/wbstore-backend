@@ -16,7 +16,7 @@ from .decorators import login_required, allow_methods, role_required
 
 from wbstorebackend.settings import DEBUG
 from .models import Merchandise, UserDetail
-from .widgets import get_user_role, binarymd5
+from .widgets import get_user_role, binarymd5, query_merchandise_name
 
 
 class CsrfTokenAPI(View):
@@ -118,3 +118,21 @@ def post_insert_merchandise(request):
     form['added_by_user'] = request.user
     Merchandise(**form).save()
     return JsonResponse({'status': 'on dev'})
+
+
+@allow_methods(['GET'])
+@login_required()
+def get_search_merchandise(request):
+    '''
+    return info about merchandise
+    require a query
+    query username or merchandise_name
+    count = 10 by default
+    '''
+    form = json.loads(request.body)
+    print(form)
+    if 'merchandise_name' in form:
+        return JsonResponse({'status': 'ok', 'data': [i.to_json_dict() for i in query_merchandise_name(form['merchandise_name'], form['per_page'], form['page_number'])]})
+    elif 'username' in form:
+        return JsonResponse({'status': 'error', 'error': 'not implemented yet'}, status=HTTPStatus.BAD_REQUEST)
+    # which merchandise? merchant id?

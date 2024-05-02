@@ -1,6 +1,7 @@
 from django.urls import path
-from .views import CsrfTokenAPI, LoginAPI, SignupAPI, get_user_detail, get_echo, \
-        get_user_loggedin, post_logout, post_insert_merchandise
+from .views import CsrfTokenAPI, LoginAPI, SignupAPI, get_user_detail, \
+        get_echo, get_user_loggedin, post_logout, post_insert_merchandise, \
+        get_search_merchandise
 
 urlpatterns = [
     path('login', LoginAPI.as_view()),
@@ -11,4 +12,5 @@ urlpatterns = [
     path('get_user_loggedin', get_user_loggedin),
     path('echo', get_echo),
     path('insert_merchandise', post_insert_merchandise),
+    path('search_merchandise', get_search_merchandise),
 ]
