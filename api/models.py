@@ -23,6 +23,19 @@ class Merchandise(models.Model):
     def __str__(self):
         return str(self.name)[:12]
 
+    def to_json_dict(self) -> dict:
+        with open(self.image_description.name, 'rb') as file:
+            image_base64 = base64.b64encode(file.read()).decode('utf-8')
+        return {
+            'name': self.name,
+            'text_description': self.text_description,
+            'image_description': image_base64,
+            'price': self.price,
+            'online_data': str(self.online_date),
+            'stock_inventory': self.stock_inventory,
+            'added_by_user': self.added_by_user.username,
+            }
+
 
 class MerchandiseDetail(models.Model):
     merchandise = models.OneToOneField(Merchandise, on_delete=models.CASCADE)
