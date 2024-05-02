@@ -5,6 +5,7 @@ from http import HTTPStatus
 
 from django.http import JsonResponse
 
+from .widgets import get_user_role
 
 def allow_methods(allowed_methods: list[str]):
     '''
@@ -29,6 +30,20 @@ def login_required():
             if not request.user.is_authenticated:
                 # or not request.user.is_permitted:
                 return JsonResponse({'error': 'Unauthorized action, login required'}, status=HTTPStatus.UNAUTHORIZED)
+            return func(request)
+        return wrapper
+    return decor
+
+
+def role_required(role: str):
+    '''
+    the user must be of a certain role
+    login_required
+    '''
+    def decor(func):
+        def wrapper(request):
+            if role != get_user_role(request.user.username):
+                return JsonResponse({'status': 'error', 'error': 'requring user role of role'}, status=HTTPStatus.UNAUTHORIZED)
             return func(request)
         return wrapper
     return decor
