@@ -7,3 +7,8 @@ def get_user_role(username: str) -> str:
     if user_detail.role_merchant:
         return 'merchant'
     return 'customer'
+
+
+def binarymd5(binstr: bytes) -> str:
+    ''' return the hexdigest of a binaydata in python str '''
+    return md5(binstr).hexdigest()
