@@ -15,7 +15,7 @@ from django.views.decorators.csrf import get_token
 from .decorators import login_required, allow_methods, role_required
 
 from wbstorebackend.settings import DEBUG
-from .models import Merchandise, UserDetail
+from .models import Merchandise, ShoppingCart, UserDetail
 from .widgets import get_user_role, binarymd5, query_merchandise_name
 
 
@@ -136,3 +136,19 @@ def get_search_merchandise(request):
     elif 'username' in form:
         return JsonResponse({'status': 'error', 'error': 'not implemented yet'}, status=HTTPStatus.BAD_REQUEST)
     # which merchandise? merchant id?
+
+
+@allow_methods(['POST'])
+@login_required()
+@role_required('customer')
+def post_add_to_shopping_chart(request):
+    form = json.loads(request.body)
+       # well well well, how do I get this?
+    merch_query_list = Merchandise.objects.filter(pk=form['merchandise_id'])
+    if len(merch_query_list) == 0:
+        return JsonResponse({'status': 'error', 'error': 'no such merchandise'}, status=HTTPStatus.BAD_REQUEST)
+    merch = merch_query_list[0]
+    if ShoppingCart.objects.filter(user=request.user).filter(merchandise=merch):
+        return JsonResponse({'status': 'ok', 'message': 'already added to chopping cart'})
+    ShoppingCart(user=request.user, merchandise=merch).save()
+    return JsonResponse({'status': 'ok', 'message': 'added to shopping cart'})
