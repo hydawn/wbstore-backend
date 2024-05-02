@@ -18,6 +18,7 @@ class Merchandise(models.Model):
     price = models.FloatField()
     online_date = models.DateTimeField("date put online", auto_now_add=True)
     stock_inventory = models.IntegerField()
+    added_by_user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.name)[:12]

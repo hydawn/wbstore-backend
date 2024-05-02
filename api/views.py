@@ -115,5 +115,6 @@ def post_insert_merchandise(request):
     form['image_description'] = ContentFile(
             content=image_binary,
             name=binarymd5(image_binary))
+    form['added_by_user'] = request.user
     Merchandise(**form).save()
     return JsonResponse({'status': 'on dev'})
