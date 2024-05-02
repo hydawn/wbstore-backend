@@ -29,6 +29,7 @@ class Merchandise(models.Model):
         with open(self.image_description.name, 'rb') as file:
             image_base64 = base64.b64encode(file.read()).decode('utf-8')
         return {
+            'id': self.id,
             'name': self.name,
             'text_description': self.text_description,
             'image_description': image_base64,
