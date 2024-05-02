@@ -1,3 +1,5 @@
+from hashlib import md5
+
 from django.contrib.auth.models import User
 from .models import UserDetail
 
