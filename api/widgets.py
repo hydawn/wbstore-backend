@@ -2,6 +2,7 @@ from hashlib import md5
 from django.core.paginator import Paginator
 
 from django.contrib.auth.models import User
+from django.db.models import QuerySet
 from .models import UserDetail, Merchandise
 
 
