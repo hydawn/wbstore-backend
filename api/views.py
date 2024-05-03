@@ -13,7 +13,8 @@ from .decorators import has_json_payload, login_required, allow_methods, \
 
 from wbstorebackend.settings import DEBUG
 from .models import Merchandise, ShoppingCart, UserDetail
-from .widgets import get_user_role, binarymd5, query_merchandise_name
+from .widgets import get_user_role, binarymd5, query_merchandise_name, \
+        paginate_queryset
 
 
 class CsrfTokenAPI(View):
@@ -148,9 +149,12 @@ def post_add_to_shopping_chart(request):
 
 
 @allow_methods(['GET'])
+@has_json_payload()
 @login_required()
 @role_required('customer')
 def get_my_shopping_chart(request):
     ''' return a list of merch '''
-    merch_list = ShoppingCart.objects.filter(user=request.user).order_by('added_date')
+    query_set = ShoppingCart.objects.filter(user=request.user).order_by('added_date')
+    form = request.json_payload
+    merch_list = paginate_queryset(query_set, form['per_page'], form['page_number'])
     return JsonResponse({'status': 'ok', 'data':[i.merchandise.to_json_dict() for i in merch_list]})
