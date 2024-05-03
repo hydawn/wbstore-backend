@@ -18,14 +18,17 @@ def binarymd5(binstr: bytes) -> str:
     return md5(binstr).hexdigest()
 
 
-def query_merchandise_name(merchandise_name: str, per_page: int, page_number: int = 1) -> list[Merchandise]:
-    ''' return Merchandise objects '''
-    # Perform the query using Django's ORM
-    queryset = Merchandise.objects.filter(name__icontains=merchandise_name).order_by('online_date')
-
+def paginate_queryset(queryset: QuerySet, per_page: int, page_number: int = 1):
     # Paginate the queryset
     paginator = Paginator(queryset, per_page)
     page_obj = paginator.get_page(page_number)
 
     # Access the objects for the current page
     return page_obj.object_list
+
+
+def query_merchandise_name(merchandise_name: str, per_page: int, page_number: int) -> list[Merchandise]:
+    ''' return Merchandise objects '''
+    # Perform the query using Django's ORM
+    queryset = Merchandise.objects.filter(name__icontains=merchandise_name).order_by('online_date')
+    return paginate_queryset(queryset, per_page, page_number)
