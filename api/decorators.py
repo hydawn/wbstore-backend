@@ -67,3 +67,22 @@ def has_json_payload():
             return func(request)
         return wrapper
     return decor
+
+
+def merchandise_exist():
+    '''
+    is this so called decorator-orianted programming?
+    assume has_json_payload
+    '''
+    def decor(func):
+        def wrapper(request):
+            merch_id = request.json_payload['merchandise_id']
+            merch_query_list = Merchandise.objects.filter(pk=merch_id)
+            if len(merch_query_list) == 0:
+                return JsonResponse(
+                        {'status': 'error', 'error': 'no such merchandise'},
+                        status=HTTPStatus.BAD_REQUEST)
+            request.merchandise = merch_query_list[0]
+            return func(request)
+        return wrapper
+    return decor
