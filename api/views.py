@@ -135,8 +135,13 @@ def get_search_merchandise(request):
     if DEBUG:
         print(request.json_payload)
     if 'merchandise_name' in request.json_payload:
-        return JsonResponse({'status': 'ok', 'data': [i.to_json_dict() for i in query_merchandise_name(form['merchandise_name'], form['per_page'], form['page_number'])]})
-    elif 'username' in request.json_payload:
+        return JsonResponse({'status': 'ok', 'data': [
+            i.to_json_dict()
+            for i in query_merchandise_name(
+                request.json_payload['merchandise_name'],
+                request.json_payload['per_page'],
+                request.json_payload['page_number'])]})
+    if 'username' in request.json_payload:
         return JsonResponse({'status': 'error', 'error': 'not implemented yet'}, status=HTTPStatus.BAD_REQUEST)
     # which merchandise? merchant id?
 
