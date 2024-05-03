@@ -82,6 +82,7 @@ def get_user_loggedin(request):
         return JsonResponse({'status': 'ok', 'loggedin': True, 'role': get_user_role(request.user.username)})
     return JsonResponse({'status': 'ok', 'loggedin': False})
 
+
 @allow_methods(['POST'])
 @login_required()
 def post_logout(request):
