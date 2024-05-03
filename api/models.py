@@ -5,6 +5,7 @@ from django.db import models
 
 
 class UserDetail(models.Model):
+    objects: models.Manager
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role_customer = models.BooleanField(default=True)
     role_merchant = models.BooleanField(default=False)
@@ -14,6 +15,7 @@ class UserDetail(models.Model):
 
 
 class Merchandise(models.Model):
+    objects: models.Manager
     name = models.CharField(max_length=512)
     text_description = models.CharField(max_length=4096, null=True)
     image_description = models.ImageField(upload_to='images/', null=True)
@@ -41,6 +43,7 @@ class Merchandise(models.Model):
 
 
 class MerchandiseDetail(models.Model):
+    objects: models.Manager
     merchandise = models.OneToOneField(Merchandise, on_delete=models.CASCADE)
     publisher = models.CharField(max_length=512, null=True)
     date_published = models.CharField(max_length=512, null=True)
@@ -52,6 +55,7 @@ class MerchandiseDetail(models.Model):
 
 
 class ShoppingCart(models.Model):
+    objects: models.Manager
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
 
@@ -60,6 +64,7 @@ class ShoppingCart(models.Model):
 
 
 class FavoriteMerchandise(models.Model):
+    objects: models.Manager
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
 
@@ -79,6 +84,7 @@ class RunningOrder(models.Model):
     #     CANCELLED = 'CANCELLED', 'CANCELLED'
     #     # the order is finished
     #     FINISHED = 'FINISHED', 'FINISHED'
+    objects: models.Manager
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
     count = models.IntegerField()
@@ -93,6 +99,7 @@ class RunningOrder(models.Model):
 
 class DeadOrder(models.Model):
     ''' orders that's finished for all sorts of reasons '''
+    objects: models.Manager
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
     count = models.IntegerField()
