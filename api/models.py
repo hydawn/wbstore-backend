@@ -58,6 +58,7 @@ class ShoppingCart(models.Model):
     objects: models.Manager
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
+    added_date = models.DateTimeField("date added", auto_now_add=True)
 
     def __str___(self):
         return str(self.user) + str(self.merchandise)
@@ -67,6 +68,7 @@ class FavoriteMerchandise(models.Model):
     objects: models.Manager
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
+    added_date = models.DateTimeField("date added", auto_now_add=True)
 
 
 class RunningOrder(models.Model):
@@ -95,6 +97,7 @@ class RunningOrder(models.Model):
     status_taken = models.BooleanField()
     # whether the customer wants to cancel the order
     status_cancelling = models.BooleanField()
+    added_date = models.DateTimeField("date added", auto_now_add=True)
 
 
 class DeadOrder(models.Model):
@@ -107,3 +110,4 @@ class DeadOrder(models.Model):
     # the order can be cancelled by the customer or the merchant
     status_cancelled = models.BooleanField()
     status_finished = models.BooleanField()
+    added_date = models.DateTimeField("date added", auto_now_add=True)
