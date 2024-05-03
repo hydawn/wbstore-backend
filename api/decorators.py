@@ -47,3 +47,22 @@ def role_required(role: str):
             return func(request)
         return wrapper
     return decor
+
+
+def has_json_payload():
+    '''
+    requests must have json payload
+    '''
+    def decor(func):
+        def wrapper(request):
+            if request.content_type != 'application/json':
+                return JsonResponse({'status': 'error', 'error': 'content_type must be application/json'}, status=HTTPStatus.BAD_REQUEST)
+            try:
+                # but how do I pass this form into func?
+                # oh my, python is so flexible
+                request.json_payload = json.loads(request.body)
+            except json.JSONDecodeError as err:
+                return JsonResponse({'status': 'error', 'error': f"payload can't be properly decoded: {err}"}, status=HTTPStatus.BAD_REQUEST)
+            return func(request)
+        return wrapper
+    return decor

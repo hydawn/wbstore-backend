@@ -28,7 +28,6 @@ class LoginAPI(View):
     def post(self, request: WSGIRequest):
         print(f'got post request')
         if request.content_type != 'application/json':
-            print()
             return JsonResponse({'status': 'error', 'error': 'content_type must be application/json'}, status=HTTPStatus.BAD_REQUEST)
         try:
             post_data = json.loads(request.body)
@@ -110,7 +109,8 @@ def post_logout(request):
 @role_required('merchant')
 def post_insert_merchandise(request):
     form = json.loads(request.body)
-    print(form)
+    if DEBUG:
+        print(form)
     image_binary = base64.b64decode(form['image_description'])
     form['image_description'] = ContentFile(
             content=image_binary,
