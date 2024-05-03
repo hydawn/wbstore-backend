@@ -1,13 +1,9 @@
-#from django.shortcuts import render
-
-import json
 import base64
 from http import HTTPStatus
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
-from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.decorators.csrf import get_token
@@ -25,52 +21,41 @@ class CsrfTokenAPI(View):
         return JsonResponse({'csrfToken': get_token(request)})
 
 
-class LoginAPI(View):
-    def post(self, request: WSGIRequest):
-        print(f'got post request')
-        if request.content_type != 'application/json':
-            return JsonResponse({'status': 'error', 'error': 'content_type must be application/json'}, status=HTTPStatus.BAD_REQUEST)
-        try:
-            post_data = json.loads(request.body)
-        except json.JSONDecodeError as jderror:
-            return JsonResponse({'status': 'error', 'error': f'JSONDecodeError: {jderror}'}, status=HTTPStatus.BAD_REQUEST)
-        username = post_data.get('username')
-        password = post_data.get('password')
-        if DEBUG:
-            print(f'got user [{username}] try to login')
-        if request.user.is_authenticated:
-            return JsonResponse({'status': f'[{username}] already logged in'}, status=HTTPStatus.OK)
-        if not (username and password):
-            return JsonResponse({'error': f'Username [{username}] or Password [{password}] not provided or Empty'}, status=HTTPStatus.BAD_REQUEST)
-        user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
-            ok_message = {'status': 'ok', 'action': 'login', 'username': username, 'role': get_user_role(username)}
-            return JsonResponse(ok_message)
-        error_message = {'status': 'error', 'action': 'login', 'error': 'Invalid credentials'}
-        return JsonResponse(error_message, status=HTTPStatus.UNAUTHORIZED)
+@allow_methods(['POST'])
+@has_json_payload()
+def post_login(request):
+    username = request.json_payload.get('username')
+    password = request.json_payload.get('password')
+    if DEBUG:
+        print(f'got user [{username}] try to login')
+    if request.user.is_authenticated:
+        return JsonResponse({'status': f'[{username}] already logged in'}, status=HTTPStatus.OK)
+    if not (username and password):
+        return JsonResponse({'error': f'Username [{username}] or Password [{password}] not provided or Empty'}, status=HTTPStatus.BAD_REQUEST)
+    user = authenticate(request, username=username, password=password)
+    if user:
+        login(request, user)
+        ok_message = {'status': 'ok', 'action': 'login', 'username': username, 'role': get_user_role(username)}
+        return JsonResponse(ok_message)
+    error_message = {'status': 'error', 'action': 'login', 'error': 'Invalid credentials'}
+    return JsonResponse(error_message, status=HTTPStatus.UNAUTHORIZED)
 
 
-class SignupAPI(View):
-    def post(self, request):
-        if request.content_type != 'application/json':
-            return JsonResponse({'status': 'error', 'error': 'content_type must be application/json'}, status=HTTPStatus.BAD_REQUEST)
-        try:
-            post_data = json.loads(request.body)
-        except json.JSONDecodeError as jderror:
-            return JsonResponse({'status': 'error', 'error': f'JSONDecodeError: {jderror}'}, status=HTTPStatus.BAD_REQUEST)
-        username = post_data.get('username')
-        password = post_data.get('password')
-        email = post_data.get('email')
-        role = post_data.get('role')
-        if not (username and email and password and role):
-            return JsonResponse({'error': 'Username, password and email and role are required'}, status=HTTPStatus.BAD_REQUEST)
-        if User.objects.filter(username=username).exists():
-            return JsonResponse({'error': 'Username already exists'}, status=HTTPStatus.BAD_REQUEST)
-        new_user = User.objects.create_user(username=username, email=email, password=password)
-        user_detail = UserDetail(user=new_user, role_customer=role == 'customer', role_merchant=role == 'merchant')
-        user_detail.save()
-        return JsonResponse({'message': 'User created successfully'}, status=HTTPStatus.CREATED)
+@allow_methods(['POST'])
+@has_json_payload()
+def post_signup(request):
+    username = request.json_payload.get('username')
+    password = request.json_payload.get('password')
+    email = request.json_payload.get('email')
+    role = request.json_payload.get('role')
+    if not (username and email and password and role):
+        return JsonResponse({'error': 'Username, password and email and role are required'}, status=HTTPStatus.BAD_REQUEST)
+    if User.objects.filter(username=username).exists():
+        return JsonResponse({'error': 'Username already exists'}, status=HTTPStatus.BAD_REQUEST)
+    new_user = User.objects.create_user(username=username, email=email, password=password)
+    user_detail = UserDetail(user=new_user, role_customer=role == 'customer', role_merchant=role == 'merchant')
+    user_detail.save()
+    return JsonResponse({'message': 'User created successfully'}, status=HTTPStatus.CREATED)
 
 
 @allow_methods(['GET'])

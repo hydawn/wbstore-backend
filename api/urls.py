@@ -1,12 +1,13 @@
 from django.urls import path
-from .views import CsrfTokenAPI, LoginAPI, SignupAPI, get_user_detail, \
-        get_echo, get_user_loggedin, post_logout, post_insert_merchandise, \
-        get_search_merchandise, post_add_to_shopping_chart
+from .views import CsrfTokenAPI, get_user_detail, post_signup, get_echo, \
+        get_user_loggedin, post_login, post_logout, post_insert_merchandise, \
+        get_search_merchandise, post_add_to_shopping_chart, \
+        get_my_shopping_chart
 
 urlpatterns = [
-    path('login', LoginAPI.as_view()),
+    path('login', post_login),
     path('logout', post_logout),
-    path('signup', SignupAPI.as_view()),
+    path('signup', post_signup),
     path('get_csrf_token', CsrfTokenAPI.as_view()),
     path('get_user_detail', get_user_detail),
     path('get_user_loggedin', get_user_loggedin),
