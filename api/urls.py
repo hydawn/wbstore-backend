@@ -15,4 +15,5 @@ urlpatterns = [
     path('insert_merchandise', post_insert_merchandise),
     path('search_merchandise', get_search_merchandise),
     path('add_to_shopping_chart', post_add_to_shopping_chart),
+    path('my_shopping_chart', get_my_shopping_chart),
 ]

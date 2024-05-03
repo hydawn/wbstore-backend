@@ -145,3 +145,12 @@ def post_add_to_shopping_chart(request):
         return JsonResponse({'status': 'ok', 'message': 'already added to chopping cart'})
     ShoppingCart(user=request.user, merchandise=merch).save()
     return JsonResponse({'status': 'ok', 'message': 'added to shopping cart'})
+
+
+@allow_methods(['GET'])
+@login_required()
+@role_required('customer')
+def get_my_shopping_chart(request):
+    ''' return a list of merch '''
+    merch_list = ShoppingCart.objects.filter(user=request.user).order_by('added_date')
+    return JsonResponse({'status': 'ok', 'data':[i.merchandise.to_json_dict() for i in merch_list]})
