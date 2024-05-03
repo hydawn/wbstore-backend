@@ -9,10 +9,10 @@ from django.views import View
 from django.views.decorators.csrf import get_token
 
 from .decorators import has_json_payload, login_required, allow_methods, \
-        role_required
+        merchandise_exist, role_required
 
 from wbstorebackend.settings import DEBUG
-from .models import Merchandise, ShoppingCart, UserDetail
+from .models import Merchandise, ShoppingCart, UserDetail, RunningOrder
 from .widgets import get_user_role, binarymd5, query_merchandise_name, \
         paginate_queryset
 
@@ -137,14 +137,12 @@ def get_search_merchandise(request):
 @has_json_payload()
 @login_required()
 @role_required('customer')
+@merchandise_exist()
 def post_add_to_shopping_chart(request):
-    merch_query_list = Merchandise.objects.filter(pk=request.json_payload['merchandise_id'])
-    if len(merch_query_list) == 0:
-        return JsonResponse({'status': 'error', 'error': 'no such merchandise'}, status=HTTPStatus.BAD_REQUEST)
-    merch = merch_query_list[0]
-    if len(ShoppingCart.objects.filter(user=request.user).filter(merchandise=merch)) != 0:
+    user_cart = ShoppingCart.objects.filter(user=request.user)
+    if len(user_cart.filter(merchandise=request.merchandise)) != 0:
         return JsonResponse({'status': 'ok', 'message': 'already added to chopping cart'})
-    ShoppingCart(user=request.user, merchandise=merch).save()
+    ShoppingCart(user=request.user, merchandise=request.merchandise).save()
     return JsonResponse({'status': 'ok', 'message': 'added to shopping cart'})
 
 
