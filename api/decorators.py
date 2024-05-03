@@ -1,6 +1,7 @@
 # the official decorator_from_middleware, decorator_from_middleware_with_args
 # isn't working. don't know why
 
+import json
 from http import HTTPStatus
 
 from django.http import JsonResponse
