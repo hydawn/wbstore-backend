@@ -12,7 +12,8 @@ from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.decorators.csrf import get_token
 
-from .decorators import login_required, allow_methods, role_required
+from .decorators import has_json_payload, login_required, allow_methods, \
+        role_required
 
 from wbstorebackend.settings import DEBUG
 from .models import Merchandise, ShoppingCart, UserDetail
@@ -105,10 +106,11 @@ def post_logout(request):
 
 
 @allow_methods(['POST'])
+@has_json_payload()
 @login_required()
 @role_required('merchant')
 def post_insert_merchandise(request):
-    form = json.loads(request.body)
+    form = request.json_payload
     if DEBUG:
         print(form)
     image_binary = base64.b64decode(form['image_description'])
@@ -117,10 +119,11 @@ def post_insert_merchandise(request):
             name=binarymd5(image_binary))
     form['added_by_user'] = request.user
     Merchandise(**form).save()
-    return JsonResponse({'status': 'on dev'})
+    return JsonResponse({'status': 'merchandise saved'})
 
 
 @allow_methods(['GET'])
+@has_json_payload()
 @login_required()
 def get_search_merchandise(request):
     '''
@@ -129,26 +132,25 @@ def get_search_merchandise(request):
     query username or merchandise_name
     count = 10 by default
     '''
-    form = json.loads(request.body)
-    print(form)
-    if 'merchandise_name' in form:
+    if DEBUG:
+        print(request.json_payload)
+    if 'merchandise_name' in request.json_payload:
         return JsonResponse({'status': 'ok', 'data': [i.to_json_dict() for i in query_merchandise_name(form['merchandise_name'], form['per_page'], form['page_number'])]})
-    elif 'username' in form:
+    elif 'username' in request.json_payload:
         return JsonResponse({'status': 'error', 'error': 'not implemented yet'}, status=HTTPStatus.BAD_REQUEST)
     # which merchandise? merchant id?
 
 
 @allow_methods(['POST'])
+@has_json_payload()
 @login_required()
 @role_required('customer')
 def post_add_to_shopping_chart(request):
-    form = json.loads(request.body)
-       # well well well, how do I get this?
-    merch_query_list = Merchandise.objects.filter(pk=form['merchandise_id'])
+    merch_query_list = Merchandise.objects.filter(pk=request.json_payload['merchandise_id'])
     if len(merch_query_list) == 0:
         return JsonResponse({'status': 'error', 'error': 'no such merchandise'}, status=HTTPStatus.BAD_REQUEST)
     merch = merch_query_list[0]
-    if ShoppingCart.objects.filter(user=request.user).filter(merchandise=merch):
+    if len(ShoppingCart.objects.filter(user=request.user).filter(merchandise=merch)) != 0:
         return JsonResponse({'status': 'ok', 'message': 'already added to chopping cart'})
     ShoppingCart(user=request.user, merchandise=merch).save()
     return JsonResponse({'status': 'ok', 'message': 'added to shopping cart'})
