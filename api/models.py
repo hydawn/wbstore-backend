@@ -36,7 +36,7 @@ class Merchandise(models.Model):
             'text_description': self.text_description,
             'image_description': image_base64,
             'price': self.price,
-            'online_data': str(self.online_date),
+            'online_date': str(self.online_date),
             'stock_inventory': self.stock_inventory,
             'added_by_user': self.added_by_user.username,
             }
