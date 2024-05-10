@@ -25,9 +25,7 @@ COPY requirements.txt .
 # use tsinghua pypi mirror
 RUN pip install --no-cache-dir -r requirements.txt
 
-# pip install before copy . . to avoid rerunning pip install everything this
-# directory changes
-# Copy all of the application code into the container
+# do I need this?
 COPY . .
 
 # Specify the command to run on container start

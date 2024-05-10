@@ -31,7 +31,7 @@ class Merchandise(models.Model):
         with open(self.image_description.name, 'rb') as file:
             image_base64 = base64.b64encode(file.read()).decode('utf-8')
         return {
-            'id': self.id,
+            'id': str(self.id),
             'name': self.name,
             'text_description': self.text_description,
             'image_description': image_base64,
@@ -99,6 +99,19 @@ class RunningOrder(models.Model):
     status_cancelling = models.BooleanField()
     added_date = models.DateTimeField("date added", auto_now_add=True)
 
+    def to_json_dict(self):
+        return {
+                'id': str(self.id),
+                'user': self.user.username,
+                'merchandise': self.merchandise.id,
+                'count': self.count,
+                'total_price': self.total_price,
+                'status_paid': self.status_paid,
+                'status_taken': self.status_taken,
+                'status_cancelling': self.status_cancelling,
+                'added_date': str(self.added_date),
+                }
+
 
 class DeadOrder(models.Model):
     ''' orders that's finished for all sorts of reasons '''
@@ -107,7 +120,18 @@ class DeadOrder(models.Model):
     merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
     count = models.IntegerField()
     total_price = models.IntegerField()
-    # the order can be cancelled by the customer or the merchant
-    status_cancelled = models.BooleanField()
-    status_finished = models.BooleanField()
+    # the order can be cancelled or finished
+    status = models.CharField(max_length=64)
+    running_added_date = models.DateTimeField("date added when it's running")
     added_date = models.DateTimeField("date added", auto_now_add=True)
+
+
+def deadorder_from_runningorder(order: RunningOrder, status: str) -> DeadOrder:
+    return DeadOrder(
+            user=order.user,
+            merchandise=order.merchandise,
+            count=order.count,
+            total_price=order.total_price,
+            status=status,
+            running_added_date=order.added_date
+            )

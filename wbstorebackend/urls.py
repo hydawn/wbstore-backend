@@ -20,7 +20,5 @@ from django.urls import path, include
 urlpatterns = [
     # WARNING: don't need this at production
     path('admin/', admin.site.urls),
-    # WARNING: the browsable API for rest_framework
-    path('api-auth/', include('rest_framework.urls')),
     path('api/', include('api.urls')),
 ]

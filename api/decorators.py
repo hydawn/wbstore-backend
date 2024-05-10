@@ -7,7 +7,7 @@ from http import HTTPStatus
 from django.http import JsonResponse
 
 from .widgets import get_user_role
-from .models import Merchandise
+from .models import Merchandise, RunningOrder
 
 def allow_methods(allowed_methods: list[str]):
     '''
@@ -53,7 +53,7 @@ def role_required(role: str):
 
 def has_json_payload():
     '''
-    requests must have json payload
+    POST requests must have json payload
     '''
     def decor(func):
         def wrapper(request):
@@ -65,6 +65,20 @@ def has_json_payload():
                 request.json_payload = json.loads(request.body)
             except json.JSONDecodeError as err:
                 return JsonResponse({'status': 'error', 'error': f"payload can't be properly decoded: {err}"}, status=HTTPStatus.BAD_REQUEST)
+            return func(request)
+        return wrapper
+    return decor
+
+
+def has_query_params(params: list[str]):
+    '''
+    GET request must have certain query params
+    '''
+    def decor(func):
+        def wrapper(request):
+            for i in params:
+                if request.GET.get(i) is None:
+                    return JsonResponse({'status': 'error', 'error': f'failed to get params: {i}'}, status=HTTPStatus.BAD_REQUEST)
             return func(request)
         return wrapper
     return decor
@@ -84,6 +98,25 @@ def merchandise_exist():
                         {'status': 'error', 'error': 'no such merchandise'},
                         status=HTTPStatus.BAD_REQUEST)
             request.merchandise = merch_query_list[0]
+            return func(request)
+        return wrapper
+    return decor
+
+
+def runningorder_exist():
+    '''
+    is this so called decorator-orianted programming?
+    assume has_json_payload
+    '''
+    def decor(func):
+        def wrapper(request):
+            order_id = request.json_payload['runningorder_id']
+            order_query_list = RunningOrder.objects.filter(pk=order_id)
+            if len(order_query_list) == 0:
+                return JsonResponse(
+                        {'status': 'error', 'error': 'no such merchandise'},
+                        status=HTTPStatus.BAD_REQUEST)
+            request.runningorder = order_query_list[0]
             return func(request)
         return wrapper
     return decor

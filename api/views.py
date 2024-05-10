@@ -9,10 +9,11 @@ from django.views import View
 from django.views.decorators.csrf import get_token
 
 from .decorators import has_json_payload, login_required, allow_methods, \
-        merchandise_exist, role_required
+        merchandise_exist, role_required, runningorder_exist, has_query_params
 
 from wbstorebackend.settings import DEBUG
-from .models import Merchandise, ShoppingCart, UserDetail, RunningOrder
+from .models import DeadOrder, Merchandise, ShoppingCart, UserDetail, \
+        RunningOrder, deadorder_from_runningorder
 from .widgets import get_user_role, binarymd5, query_merchandise_name, \
         paginate_queryset
 
@@ -110,7 +111,7 @@ def post_insert_merchandise(request):
 
 
 @allow_methods(['GET'])
-@has_json_payload()
+@has_query_params(['merchandise_name', 'per_page', 'page_number'])
 @login_required()
 def get_search_merchandise(request):
     '''
@@ -119,17 +120,14 @@ def get_search_merchandise(request):
     query username or merchandise_name
     count = 10 by default
     '''
-    if DEBUG:
-        print(request.json_payload)
-    if 'merchandise_name' in request.json_payload:
-        return JsonResponse({'status': 'ok', 'data': [
-            i.to_json_dict()
-            for i in query_merchandise_name(
-                request.json_payload['merchandise_name'],
-                request.json_payload['per_page'],
-                request.json_payload['page_number'])]})
-    if 'username' in request.json_payload:
-        return JsonResponse({'status': 'error', 'error': 'not implemented yet'}, status=HTTPStatus.BAD_REQUEST)
+    merchandise_name = request.GET.get('merchandise_name')
+    per_page = request.GET.get('per_page')
+    page_number = request.GET.get('page_number')
+    return JsonResponse({'status': 'ok', 'data': [
+        i.to_json_dict()
+        for i in query_merchandise_name(merchandise_name, int(per_page), int(page_number))]})
+    # if 'username' in request.json_payload:
+    #     return JsonResponse({'status': 'error', 'error': 'not implemented yet'}, status=HTTPStatus.BAD_REQUEST)
     # which merchandise? merchant id?
 
 
@@ -147,12 +145,85 @@ def post_add_to_shopping_chart(request):
 
 
 @allow_methods(['GET'])
-@has_json_payload()
+@has_query_params(['per_page', 'page_number'])
 @login_required()
 @role_required('customer')
 def get_my_shopping_chart(request):
     ''' return a list of merch '''
     query_set = ShoppingCart.objects.filter(user=request.user).order_by('added_date')
-    form = request.json_payload
-    merch_list = paginate_queryset(query_set, form['per_page'], form['page_number'])
+    per_page = int(request.GET.get('per_page'))
+    page_number = int(request.GET.get('page_number'))
+    merch_list = paginate_queryset(query_set, per_page, page_number)
     return JsonResponse({'status': 'ok', 'data':[i.merchandise.to_json_dict() for i in merch_list]})
+
+
+@allow_methods(['POST'])
+@has_json_payload()
+@login_required()
+@role_required('customer')
+@merchandise_exist()
+def post_make_order(request):
+    ''' a user creating an order '''
+    form = request.json_payload
+    form['user'] = request.user
+    form['merchandise'] = request.merchandise
+    RunningOrder(**form).save()
+
+
+@allow_methods(['GET'])
+@login_required()
+@role_required('customer')
+def get_customer_running_orders(request):
+    ''' get running orders '''
+    queryset = RunningOrder.objects.filter(user=request.user)
+    return JsonResponse({'status': 'ok', 'data': [i.to_json_dict() for i in queryset]})
+
+
+@allow_methods(['POST'])
+@has_json_payload()
+@login_required()
+@role_required('customer')
+@runningorder_exist()
+def post_customer_change_order(request):
+    ''' user changing an order make, paid, cancel '''
+    if request.json_payload['action'] == 'pay':
+        if request.runningorder.status_paid:
+            return JsonResponse({'status': 'alert', 'alert': 'already paid'})
+        request.runningorder.status_paid = True
+    elif request.json_payload['action'] == 'cancel':
+        if request.runningorder.status_cancelling:
+            return JsonResponse({'status': 'alert', 'alert': 'already cancelled'})
+        request.runningorder.status_cancelling = True
+    return JsonResponse({'status': 'ok'})
+
+
+@allow_methods(['POST'])
+@has_json_payload()
+@login_required()
+@role_required('merchant')
+@runningorder_exist()
+def post_merchant_change_order(request):
+    ''' user changing an order make, paid, cancel '''
+    if request.json_payload['action'] == 'take':
+        if request.runningorder.status_taken:
+            return JsonResponse({'status': 'alert', 'alert': 'already taken'})
+        request.runningorder.status_taken = True
+    elif request.json_payload['action'] == 'accept cancel':
+        if not request.runningorder.status_cancelling:
+            return JsonResponse({'status': 'error', 'error': 'not cancelling'}, status=HTTPStatus.BAD_REQUEST)
+        deadorder_from_runningorder(request.runningorder, 'cancelled').save()
+        request.runningorder.delete()
+    return JsonResponse({'status': 'ok'})
+
+
+@allow_methods(['POST'])
+@has_json_payload()
+@login_required()
+@role_required('merchant')
+@runningorder_exist()
+def post_take_order(request):
+    ''' a merchant taking an order -- set the order state to taken '''
+    form = request.json_payload
+    form['user'] = request.user
+    form['merchandise'] = request.merchandise
+    RunningOrder(**form).save()
