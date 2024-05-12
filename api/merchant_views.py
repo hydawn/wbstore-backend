@@ -17,8 +17,6 @@ from .decorators import has_json_payload, login_required, allow_methods, \
 @role_required('merchant')
 def post_insert_merchandise(request):
     form = request.json_payload
-    if DEBUG:
-        print(form)
     image_binary = base64.b64decode(form['image_description'])
     form['image_description'] = ContentFile(
             content=image_binary,
