@@ -165,9 +165,16 @@ def get_my_shopping_chart(request):
 def post_make_order(request):
     ''' a user creating an order '''
     form = request.json_payload
+    if DEBUG:
+        print(f'get form {form}')
     form['user'] = request.user
     form['merchandise'] = request.merchandise
-    RunningOrder(**form).save()
+    form.pop('merchandise_id')
+    new_order = RunningOrder(**form)
+    new_order.save()
+    if DEBUG:
+        print(f'get new order {new_order.id}')
+    return JsonResponse({'status': 'ok', 'data': {'orderId': new_order.id}})
 
 
 @allow_methods(['GET'])
