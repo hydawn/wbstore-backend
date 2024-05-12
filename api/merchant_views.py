@@ -1,7 +1,5 @@
 import base64
 
-from wbstorebackend.settings import DEBUG
-
 from django.http import JsonResponse
 from django.core.files.base import ContentFile
 
