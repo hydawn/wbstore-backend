@@ -190,6 +190,8 @@ def post_customer_change_order(request):
     return JsonResponse({'status': 'ok'})
 
 
+# TODO: more checks on the backend:
+# order status/order number valid, that sort of thing
 @allow_methods(['POST'])
 @has_json_payload()
 @login_required()
