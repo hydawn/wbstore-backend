@@ -105,11 +105,11 @@ def get_search_merchandise(request):
     count = 10 by default
     '''
     merchandise_name = request.GET.get('merchandise_name')
-    per_page = request.GET.get('per_page')
-    page_number = request.GET.get('page_number')
+    per_page = int(request.GET.get('per_page'))
+    page_number = int(request.GET.get('page_number'))
     return JsonResponse({'status': 'ok', 'data': [
         i.to_json_dict()
-        for i in query_merchandise_name(merchandise_name, int(per_page), int(page_number))]})
+        for i in query_merchandise_name(merchandise_name, per_page, page_number)]})
     # if 'username' in request.json_payload:
     #     return JsonResponse({'status': 'error', 'error': 'not implemented yet'}, status=HTTPStatus.BAD_REQUEST)
     # which merchandise? merchant id?
