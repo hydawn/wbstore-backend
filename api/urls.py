@@ -4,7 +4,7 @@ from .views import CsrfTokenAPI, get_user_detail, post_signup, get_echo, \
         get_search_merchandise, post_add_to_shopping_chart, \
         get_my_shopping_chart, get_get_merchandise, post_make_order, \
         get_get_order, post_customer_change_order, get_search_cutomer_order, \
-        post_merchant_change_order
+        post_merchant_change_order, get_get_merchant_merchandise
 
 from .merchant_views import post_insert_merchandise
 
@@ -26,4 +26,5 @@ urlpatterns = [
     path('customer_change_order', post_customer_change_order),
     path('merchant_change_order', post_merchant_change_order),
     path('search_cutomer_order', get_search_cutomer_order),
+    path('get_merchant_merchandise', get_get_merchant_merchandise),
 ]

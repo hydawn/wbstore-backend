@@ -33,3 +33,10 @@ def query_merchandise_name(merchandise_name: str, per_page: int, page_number: in
     # Perform the query using Django's ORM
     queryset = Merchandise.objects.filter(name__regex=merchandise_name).order_by('online_date')
     return paginate_queryset(queryset, per_page, page_number)
+
+
+def query_merchandise_user(user: User, per_page: int, page_number: int) -> list[Merchandise]:
+    ''' return Merchandise objects '''
+    # Perform the query using Django's ORM
+    queryset = Merchandise.objects.filter(added_by_user=user).order_by('online_date')
+    return paginate_queryset(queryset, per_page, page_number)
