@@ -10,7 +10,8 @@ from django.views.decorators.csrf import get_token
 
 from .decorators import has_json_payload, login_required, allow_methods, \
         merchandise_exist, role_required, runningorder_exist, \
-        has_query_params
+        has_query_params, user_can_view_runningorder, \
+        user_can_modify_runningorder
 
 from wbstorebackend.settings import DEBUG
 from .models import DeadOrder, Merchandise, ShoppingCart, UserDetail, \
@@ -175,6 +176,8 @@ def get_customer_running_orders(request):
 @login_required()
 @role_required('customer')
 @runningorder_exist('post')
+@user_can_view_runningorder()
+@user_can_modify_runningorder()
 def post_customer_change_order(request):
     ''' user changing an order make, paid, cancel '''
     if request.json_payload['action'] == 'pay':
@@ -185,6 +188,7 @@ def post_customer_change_order(request):
         if request.runningorder.status_cancelling:
             return JsonResponse({'status': 'alert', 'alert': 'already cancelled'})
         request.runningorder.status_cancelling = True
+    request.runningorder.save()
     return JsonResponse({'status': 'ok'})
 
 
