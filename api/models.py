@@ -91,7 +91,7 @@ class RunningOrder(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
     count = models.IntegerField()
-    total_price = models.IntegerField()
+    total_price = models.FloatField()
     # whether the customer has paid the order
     status_paid = models.BooleanField()
     # whether the merchant has taken the order
@@ -121,7 +121,7 @@ class DeadOrder(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
     count = models.IntegerField()
-    total_price = models.IntegerField()
+    total_price = models.FloatField()
     # the order can be cancelled or finished
     status = models.CharField(max_length=64)
     running_added_date = models.DateTimeField("date added when it's running")
