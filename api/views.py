@@ -197,28 +197,19 @@ def post_customer_change_order(request):
 @login_required()
 @role_required('merchant')
 @runningorder_exist('post')
+@user_can_view_runningorder()
+@user_can_modify_runningorder()
 def post_merchant_change_order(request):
     ''' user changing an order make, paid, cancel '''
-    if request.json_payload['action'] == 'take':
+    action = request.json_payload['action']
+    if action == 'take':
         if request.runningorder.status_taken:
             return JsonResponse({'status': 'alert', 'alert': 'already taken'})
         request.runningorder.status_taken = True
-    elif request.json_payload['action'] == 'accept cancel':
+        request.runningorder.save()
+    elif action == 'accept cancel':
         if not request.runningorder.status_cancelling:
             return JsonResponse({'status': 'error', 'error': 'not cancelling'}, status=HTTPStatus.BAD_REQUEST)
         deadorder_from_runningorder(request.runningorder, 'cancelled').save()
         request.runningorder.delete()
     return JsonResponse({'status': 'ok'})
-
-
-@allow_methods(['POST'])
-@has_json_payload()
-@login_required()
-@role_required('merchant')
-@runningorder_exist('post')
-def post_take_order(request):
-    ''' a merchant taking an order -- set the order state to taken '''
-    form = request.json_payload
-    form['user'] = request.user
-    form['merchandise'] = request.merchandise
-    RunningOrder(**form).save()
