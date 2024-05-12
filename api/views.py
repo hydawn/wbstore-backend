@@ -211,6 +211,13 @@ def post_merchant_change_order(request):
         # TODO: make these atomic
         deadorder_from_runningorder(request.runningorder, 'cancelled').save()
         request.runningorder.delete()
+    elif action == 'accept finish':
+        if not request.runningorder.status_taken:
+            return JsonResponse({'status': 'error', 'error': 'order is not taken yet'})
+        if request.runningorder.status_cancelling:
+            return JsonResponse({'status': 'error', 'error': 'order is cancelling'})
+        deadorder_from_runningorder(request.runningorder, 'finished').save()
+        request.runningorder.delete()
     return JsonResponse({'status': 'ok'})
 
 
