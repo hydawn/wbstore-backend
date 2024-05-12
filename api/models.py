@@ -127,6 +127,19 @@ class DeadOrder(models.Model):
     running_added_date = models.DateTimeField("date added when it's running")
     added_date = models.DateTimeField("date added", auto_now_add=True)
 
+    def to_json_dict(self):
+        return {
+                'id': str(self.id),
+                'username': self.user.username,
+                'user_id': str(self.user.id),
+                'merchandise_id': str(self.merchandise.id),
+                'count': self.count,
+                'total_price': self.total_price,
+                'status': self.status,
+                'running_added_date': str(self.running_added_date),
+                'added_date': str(self.added_date),
+                }
+
 
 def deadorder_from_runningorder(order: RunningOrder, status: str) -> DeadOrder:
     return DeadOrder(
