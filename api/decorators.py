@@ -127,6 +127,46 @@ def runningorder_exist(method: str):
             return func(request)
         return wrapper
     return decor
+
+
+def user_is_order_creater(request) -> bool:
+    return request.user.id == request.runningorder.user.id
+
+
+def user_is_order_taker(request) -> bool:
+    ''' user is the order's merchandise's owner '''
+    return request.user.id == request.runningorder.merchandise.added_by_user.id
+
+
+def user_can_view_runningorder():
+    '''
+    user is creater of order or creater of merchandise
+    '''
+    def decor(func):
+        def wrapper(request):
+            if user_is_order_creater(request) or user_is_order_taker(request):
+                return func(request)
+            return JsonResponse({'status': 'error', 'error': 'user not authorised to view this order'}, status=HTTPStatus.BAD_REQUEST)
+        return wrapper
+    return decor
+
+
+def user_can_modify_runningorder():
+    def decor(func):
+        def wrapper(request):
+            action = request.json_payload['action']
+            role = get_user_role(request.user.username)
+            not_allowed = JsonResponse({'status': 'error', 'error': f'action {action} not allowed by your role {role}'}, status=HTTPStatus.BAD_REQUEST)
+            allowed = {
+                    'merchant': ['take', 'accept cancel'],
+                    'customer': ['pay', 'cancel'],
+                    }
+            if action not in allowed[role]:
+                return not_allowed
+            if role == 'merchant' and not user_is_order_taker(request):
+                return not_allowed
+            if role == 'customer' and not user_is_order_creater(request):
+                return not_allowed
             return func(request)
         return wrapper
     return decor
