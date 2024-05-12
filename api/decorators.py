@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from .widgets import get_user_role
 from .models import Merchandise, RunningOrder
 
+
 def allow_methods(allowed_methods: list[str]):
     '''
     the decorated function must be called with certain http methods
