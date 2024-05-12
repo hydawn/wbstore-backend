@@ -18,6 +18,7 @@ class Merchandise(models.Model):
     objects: models.Manager
     name = models.CharField(max_length=512)
     text_description = models.CharField(max_length=4096, null=True)
+    image_type = models.CharField(max_length=64)
     image_description = models.ImageField(upload_to='images/', null=True)
     price = models.FloatField()
     online_date = models.DateTimeField("date put online", auto_now_add=True)
@@ -34,6 +35,7 @@ class Merchandise(models.Model):
             'id': str(self.id),
             'name': self.name,
             'text_description': self.text_description,
+            'image_type': self.image_type,
             'image_description': image_base64,
             'price': self.price,
             'online_date': str(self.online_date),
