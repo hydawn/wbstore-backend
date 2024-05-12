@@ -1,9 +1,7 @@
-import base64
 from http import HTTPStatus
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.core.files.base import ContentFile
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.decorators.csrf import get_token
@@ -14,9 +12,9 @@ from .decorators import has_json_payload, login_required, allow_methods, \
         user_can_modify_runningorder
 
 from wbstorebackend.settings import DEBUG
-from .models import DeadOrder, Merchandise, ShoppingCart, UserDetail, \
-        RunningOrder, deadorder_from_runningorder
-from .widgets import get_user_role, binarymd5, query_merchandise_name, \
+from .models import ShoppingCart, UserDetail, RunningOrder, \
+        deadorder_from_runningorder
+from .widgets import get_user_role, query_merchandise_name, \
         paginate_queryset
 
 
@@ -139,7 +137,7 @@ def get_my_shopping_chart(request):
     per_page = int(request.GET.get('per_page'))
     page_number = int(request.GET.get('page_number'))
     merch_list = paginate_queryset(query_set, per_page, page_number)
-    return JsonResponse({'status': 'ok', 'data':[i.merchandise.to_json_dict() for i in merch_list]})
+    return JsonResponse({'status': 'ok', 'data': [i.merchandise.to_json_dict() for i in merch_list]})
 
 
 @allow_methods(['POST'])
@@ -213,3 +211,32 @@ def post_merchant_change_order(request):
         deadorder_from_runningorder(request.runningorder, 'cancelled').save()
         request.runningorder.delete()
     return JsonResponse({'status': 'ok'})
+
+
+@allow_methods(['GET'])
+@has_query_params(['merchandise_id'])
+@login_required()
+@merchandise_exist('get')
+def get_get_merchandise(request):
+    return JsonResponse({'status': 'ok', 'data': request.merchandise.to_json_dict()})
+
+
+@allow_methods(['GET'])
+@has_query_params(['runningorder_id'])
+@login_required()
+@runningorder_exist('get')
+@user_can_view_runningorder()
+def get_get_order(request):
+    return JsonResponse({'status': 'ok', 'data': request.runningorder.to_json_dict()})
+
+
+@allow_methods(['GET'])
+@has_query_params(['per_page', 'page_number'])
+@login_required()
+@role_required('customer')
+def get_search_cutomer_order(request):
+    per_page = int(request.GET.get('per_page'))
+    page_number = int(request.GET.get('page_number'))
+    queryset = RunningOrder.objects.filter(user=request.user).order_by('added_date')
+    queryset = paginate_queryset(queryset, per_page, page_number)
+    return JsonResponse({'status': 'ok', 'data': [i.to_json_dict() for i in queryset]})
