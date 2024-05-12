@@ -84,15 +84,18 @@ def has_query_params(params: list[str]):
     return decor
 
 
-def merchandise_exist():
+def merchandise_exist(method: str):
     '''
     is this so called decorator-orianted programming?
     assume has_json_payload
     '''
     def decor(func):
         def wrapper(request):
-            merch_id = request.json_payload['merchandise_id']
-            merch_query_list = Merchandise.objects.filter(pk=merch_id)
+            if method == 'get':
+                merchandise_id = request.GET.get('merchandise_id')
+            else:
+                merchandise_id = request.json_payload['merchandise_id']
+            merch_query_list = Merchandise.objects.filter(pk=merchandise_id)
             if len(merch_query_list) == 0:
                 return JsonResponse(
                         {'status': 'error', 'error': 'no such merchandise'},

@@ -135,7 +135,7 @@ def get_search_merchandise(request):
 @has_json_payload()
 @login_required()
 @role_required('customer')
-@merchandise_exist()
+@merchandise_exist('post')
 def post_add_to_shopping_chart(request):
     user_cart = ShoppingCart.objects.filter(user=request.user)
     if len(user_cart.filter(merchandise=request.merchandise)) != 0:
@@ -161,7 +161,7 @@ def get_my_shopping_chart(request):
 @has_json_payload()
 @login_required()
 @role_required('customer')
-@merchandise_exist()
+@merchandise_exist('post')
 def post_make_order(request):
     ''' a user creating an order '''
     form = request.json_payload
