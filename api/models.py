@@ -39,6 +39,7 @@ class Merchandise(models.Model):
             'online_date': str(self.online_date),
             'stock_inventory': self.stock_inventory,
             'added_by_user': self.added_by_user.username,
+            'added_by_user_id': str(self.added_by_user.id),
             }
 
 
@@ -102,8 +103,9 @@ class RunningOrder(models.Model):
     def to_json_dict(self):
         return {
                 'id': str(self.id),
-                'user': self.user.username,
-                'merchandise': self.merchandise.id,
+                'username': self.user.username,
+                'user_id': str(self.user.id),
+                'merchandise_id': str(self.merchandise.id),
                 'count': self.count,
                 'total_price': self.total_price,
                 'status_paid': self.status_paid,
