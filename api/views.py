@@ -9,7 +9,8 @@ from django.views import View
 from django.views.decorators.csrf import get_token
 
 from .decorators import has_json_payload, login_required, allow_methods, \
-        merchandise_exist, role_required, runningorder_exist, has_query_params
+        merchandise_exist, role_required, runningorder_exist, \
+        has_query_params
 
 from wbstorebackend.settings import DEBUG
 from .models import DeadOrder, Merchandise, ShoppingCart, UserDetail, \
@@ -190,7 +191,7 @@ def get_customer_running_orders(request):
 @has_json_payload()
 @login_required()
 @role_required('customer')
-@runningorder_exist()
+@runningorder_exist('post')
 def post_customer_change_order(request):
     ''' user changing an order make, paid, cancel '''
     if request.json_payload['action'] == 'pay':
@@ -208,7 +209,7 @@ def post_customer_change_order(request):
 @has_json_payload()
 @login_required()
 @role_required('merchant')
-@runningorder_exist()
+@runningorder_exist('post')
 def post_merchant_change_order(request):
     ''' user changing an order make, paid, cancel '''
     if request.json_payload['action'] == 'take':
@@ -227,7 +228,7 @@ def post_merchant_change_order(request):
 @has_json_payload()
 @login_required()
 @role_required('merchant')
-@runningorder_exist()
+@runningorder_exist('post')
 def post_take_order(request):
     ''' a merchant taking an order -- set the order state to taken '''
     form = request.json_payload

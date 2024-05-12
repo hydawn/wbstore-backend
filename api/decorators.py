@@ -106,20 +106,27 @@ def merchandise_exist(method: str):
     return decor
 
 
-def runningorder_exist():
+def runningorder_exist(method: str):
     '''
     is this so called decorator-orianted programming?
     assume has_json_payload
     '''
     def decor(func):
         def wrapper(request):
-            order_id = request.json_payload['runningorder_id']
-            order_query_list = RunningOrder.objects.filter(pk=order_id)
-            if len(order_query_list) == 0:
+            if method == 'post':
+                order_id = request.json_payload['runningorder_id']
+            else:
+                # method == 'get'
+                order_id = request.GET.get('runningorder_id')
+            try:
+                request.runningorder = RunningOrder.objects.get(pk=order_id)
+            except RunningOrder.DoesNotExist as err:
                 return JsonResponse(
-                        {'status': 'error', 'error': 'no such merchandise'},
+                        {'status': 'error', 'error': f'no such order: {err}'},
                         status=HTTPStatus.BAD_REQUEST)
-            request.runningorder = order_query_list[0]
+            return func(request)
+        return wrapper
+    return decor
             return func(request)
         return wrapper
     return decor
