@@ -153,6 +153,13 @@ def post_make_order(request):
     form['user'] = request.user
     form['merchandise'] = request.merchandise
     form.pop('merchandise_id')
+    try:
+        form['count'] = int(form['count'])
+        if form['count'] <= 0:
+            return JsonResponse({'status': 'error', 'error': 'count of merchant less than 1 is not accepted'})
+        form['total_price'] = round(float(form['total_price']), 2)
+    except ValueError as err:
+        return JsonResponse({'status': 'error', 'error': f'error in casting value: {err}'})
     new_order = RunningOrder(**form)
     new_order.save()
     if DEBUG:
