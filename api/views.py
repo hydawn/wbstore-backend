@@ -94,23 +94,6 @@ def post_logout(request):
     return JsonResponse({'status': 'ok'})
 
 
-@allow_methods(['POST'])
-@has_json_payload()
-@login_required()
-@role_required('merchant')
-def post_insert_merchandise(request):
-    form = request.json_payload
-    if DEBUG:
-        print(form)
-    image_binary = base64.b64decode(form['image_description'])
-    form['image_description'] = ContentFile(
-            content=image_binary,
-            name=binarymd5(image_binary))
-    form['added_by_user'] = request.user
-    Merchandise(**form).save()
-    return JsonResponse({'status': 'merchandise saved'})
-
-
 @allow_methods(['GET'])
 @has_query_params(['merchandise_name', 'per_page', 'page_number'])
 @login_required()
