@@ -13,7 +13,7 @@ from .decorators import has_json_payload, login_required, allow_methods, \
         user_can_modify_runningorder
 
 from wbstorebackend.settings import DEBUG
-from .models import ShoppingCart, UserDetail, RunningOrder
+from .models import ShoppingCart, UserDetail, RunningOrder, deadorder_from_runningorder
 from .widgets import get_user_role, query_merchandise_name, \
         paginate_queryset
 
@@ -226,7 +226,7 @@ def get_get_order(request):
 @has_query_params(['per_page', 'page_number'])
 @login_required()
 @role_required('customer')
-def get_search_cutomer_order(request):
+def get_search_customer_order(request):
     per_page = int(request.GET.get('per_page'))
     page_number = int(request.GET.get('page_number'))
     queryset = RunningOrder.objects.filter(user=request.user).order_by('added_date')
