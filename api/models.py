@@ -66,6 +66,16 @@ class ShoppingCart(models.Model):
     def __str___(self):
         return str(self.user) + str(self.merchandise)
 
+    @property
+    def json_dict(self):
+        return {
+                'id': str(self.id),
+                'username': self.user.username,
+                'user_id': str(self.user.id),
+                'merchandise_id': str(self.merchandise.id),
+                'added_date': str(self.added_date),
+                }
+
 
 class FavoriteMerchandise(models.Model):
     objects: models.Manager
