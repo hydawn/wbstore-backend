@@ -3,10 +3,10 @@ from .views import CsrfTokenAPI, get_user_detail, post_signup, get_echo, \
         get_user_loggedin, post_login, post_logout, \
         get_search_merchandise, post_add_to_shopping_chart, \
         get_my_shopping_chart, get_get_merchandise, post_make_order, \
-        get_get_order, post_customer_change_order, get_search_cutomer_order, \
-        post_merchant_change_order, get_get_merchant_merchandise
+        get_get_order, post_customer_change_order, get_search_cutomer_order
 
-from .merchant_views import post_insert_merchandise
+from .merchant_views import post_insert_merchandise, \
+        post_merchant_change_order, get_get_merchant_merchandise
 
 urlpatterns = [
     path('login', post_login),
