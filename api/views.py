@@ -193,6 +193,14 @@ def post_customer_change_order(request):
         if request.runningorder.status_cancelling:
             return JsonResponse({'status': 'alert', 'alert': 'already cancelled'})
         request.runningorder.status_cancelling = True
+    elif request.json_payload['action'] == 'finish':
+        if request.runningorder.status_taken:
+            return JsonResponse(
+                    {'status': 'error', 'error': 'can not finish: order not taken yet'},
+                    status=HTTPStatus)
+        # TODO: make these atomic
+        deadorder_from_runningorder(request.runningorder, 'finished').save()
+        request.runningorder.delete()
     request.runningorder.save()
     return JsonResponse({'status': 'ok'})
 
