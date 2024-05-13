@@ -13,8 +13,8 @@ from .decorators import has_json_payload, login_required, allow_methods, \
         user_can_modify_runningorder
 
 from wbstorebackend.settings import DEBUG
-from .models import ShoppingCart, UserDetail, RunningOrder
-from .widgets import get_user_role, query_merchandise_name, \
+from .models import UserDetail, RunningOrder
+from .widgets import get_user_role, make_order_form, query_merchandise_name, \
         paginate_queryset
 
 
@@ -119,61 +119,16 @@ def get_search_merchandise(request):
 @login_required()
 @role_required('customer')
 @merchandise_exist('post')
-def post_add_to_shopping_chart(request):
-    user_cart = ShoppingCart.objects.filter(user=request.user)
-    if len(user_cart.filter(merchandise=request.merchandise)) != 0:
-        return JsonResponse({'status': 'ok', 'message': 'already added to chopping cart'})
-    ShoppingCart(user=request.user, merchandise=request.merchandise).save()
-    return JsonResponse({'status': 'ok', 'message': 'added to shopping cart'})
-
-
-@allow_methods(['GET'])
-@has_query_params(['per_page', 'page_number'])
-@login_required()
-@role_required('customer')
-def get_my_shopping_chart(request):
-    ''' return a list of merch '''
-    query_set = ShoppingCart.objects.filter(user=request.user).order_by('added_date')
-    per_page = int(request.GET.get('per_page'))
-    page_number = int(request.GET.get('page_number'))
-    merch_list = paginate_queryset(query_set, per_page, page_number)
-    return JsonResponse({'status': 'ok', 'data': [i.merchandise.to_json_dict() for i in merch_list]})
-
-
-@allow_methods(['POST'])
-@has_json_payload()
-@login_required()
-@role_required('customer')
-@merchandise_exist('post')
 def post_make_order(request):
     ''' a user creating an order '''
-    form = request.json_payload
-    if DEBUG:
-        print(f'get form {form}')
-    form['user'] = request.user
-    form['merchandise'] = request.merchandise
-    form.pop('merchandise_id')
-    try:
-        form['count'] = int(form['count'])
-        if form['count'] <= 0:
-            return JsonResponse({'status': 'error', 'error': 'count of merchant less than 1 is not accepted'})
-        form['total_price'] = round(float(form['total_price']), 2)
-    except ValueError as err:
-        return JsonResponse({'status': 'error', 'error': f'error in casting value: {err}'})
+    form = make_order_form(request, status_incart=False)
+    if isinstance(form, JsonResponse):
+        return form
     new_order = RunningOrder(**form)
     new_order.save()
     if DEBUG:
         print(f'get new order {new_order.id}')
     return JsonResponse({'status': 'ok', 'data': {'orderId': new_order.id}})
-
-
-@allow_methods(['GET'])
-@login_required()
-@role_required('customer')
-def get_customer_running_orders(request):
-    ''' get running orders '''
-    queryset = RunningOrder.objects.filter(user=request.user)
-    return JsonResponse({'status': 'ok', 'data': [i.to_json_dict() for i in queryset]})
 
 
 @allow_methods(['POST'])
@@ -230,6 +185,11 @@ def get_get_order(request):
 def get_search_customer_order(request):
     per_page = int(request.GET.get('per_page'))
     page_number = int(request.GET.get('page_number'))
-    queryset = RunningOrder.objects.filter(user=request.user).order_by('added_date')
+    queryset = RunningOrder.objects.filter(user=request.user, status_incart=False).order_by('added_date')
+    total_count = len(queryset)
     queryset = paginate_queryset(queryset, per_page, page_number)
-    return JsonResponse({'status': 'ok', 'data': [i.to_json_dict() for i in queryset]})
+    return JsonResponse({
+        'status': 'ok',
+        'data': {
+                'order_list': [i.to_json_dict() for i in queryset],
+                'total_count': total_count}})

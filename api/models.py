@@ -57,26 +57,6 @@ class MerchandiseDetail(models.Model):
         return str(self.merchandise)
 
 
-class ShoppingCart(models.Model):
-    objects: models.Manager
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
-    added_date = models.DateTimeField("date added", auto_now_add=True)
-
-    def __str___(self):
-        return str(self.user) + str(self.merchandise)
-
-    @property
-    def json_dict(self):
-        return {
-                'id': str(self.id),
-                'username': self.user.username,
-                'user_id': str(self.user.id),
-                'merchandise_id': str(self.merchandise.id),
-                'added_date': str(self.added_date),
-                }
-
-
 class FavoriteMerchandise(models.Model):
     objects: models.Manager
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -98,6 +78,8 @@ class RunningOrder(models.Model):
     # whether the customer wants to cancel the order
     status_cancelling = models.BooleanField()
     status_end = models.CharField(max_length=64, default='running')
+    # whether this is inside a shoppingcart
+    status_incart = models.BooleanField(default=False)
     added_date = models.DateTimeField("date added", auto_now_add=True)
 
     def to_json_dict(self):
@@ -112,5 +94,6 @@ class RunningOrder(models.Model):
                 'status_taken': self.status_taken,
                 'status_cancelling': self.status_cancelling,
                 'status_end': self.status_end,
+                'status_incart': self.status_incart,
                 'added_date': str(self.added_date),
                 }

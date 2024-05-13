@@ -96,6 +96,11 @@ def get_search_merchant_order(request):
             merchandise__in=Merchandise.objects.filter(
                 added_by_user=request.user
             )).order_by('added_date')
+    total_count = len(queryset)
     queryset = paginate_queryset(queryset, per_page, page_number)
-
-    return JsonResponse({'status': 'ok', 'data': [i.to_json_dict() for i in queryset]})
+    return JsonResponse({
+        'status': 'ok',
+        'data': {
+            'order_list': [i.to_json_dict() for i in queryset],
+            'total_count': total_count
+        }})
