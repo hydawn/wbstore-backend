@@ -13,7 +13,7 @@ from .decorators import has_json_payload, login_required, allow_methods, \
         user_can_modify_runningorder
 
 from wbstorebackend.settings import DEBUG
-from .models import ShoppingCart, UserDetail, RunningOrder, deadorder_from_runningorder
+from .models import ShoppingCart, UserDetail, RunningOrder
 from .widgets import get_user_role, query_merchandise_name, \
         paginate_queryset
 
@@ -185,6 +185,9 @@ def get_customer_running_orders(request):
 @user_can_modify_runningorder()
 def post_customer_change_order(request):
     ''' user changing an order make, paid, cancel '''
+    status = request.runningorder.status_end
+    if status not in ['running']:
+        return JsonResponse({'status': 'error', 'error': f'no action is to be taken on a order in a state {status}'})
     if request.json_payload['action'] == 'pay':
         if request.runningorder.status_paid:
             return JsonResponse({'status': 'alert', 'alert': 'already paid'})
@@ -194,13 +197,11 @@ def post_customer_change_order(request):
             return JsonResponse({'status': 'alert', 'alert': 'already cancelled'})
         request.runningorder.status_cancelling = True
     elif request.json_payload['action'] == 'finish':
-        if request.runningorder.status_taken:
+        if not request.runningorder.status_taken:
             return JsonResponse(
                     {'status': 'error', 'error': 'can not finish: order not taken yet'},
                     status=HTTPStatus)
-        # TODO: make these atomic
-        deadorder_from_runningorder(request.runningorder, 'finished').save()
-        request.runningorder.delete()
+        request.runningorder.status_end = 'finished'
     request.runningorder.save()
     return JsonResponse({'status': 'ok'})
 

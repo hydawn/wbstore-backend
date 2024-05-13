@@ -5,8 +5,8 @@ from http import HTTPStatus
 from django.http import JsonResponse
 from django.core.files.base import ContentFile
 
-from .models import Merchandise, deadorder_from_runningorder
-from .widgets import binarymd5, query_merchandise_user
+from .models import Merchandise, RunningOrder
+from .widgets import binarymd5, query_merchandise_user, paginate_queryset
 from .decorators import has_json_payload, login_required, allow_methods, \
         role_required, runningorder_exist, user_can_view_runningorder, \
         user_can_modify_runningorder, has_query_params
@@ -38,6 +38,9 @@ def post_insert_merchandise(request):
 @user_can_modify_runningorder()
 def post_merchant_change_order(request):
     ''' user changing an order make, paid, cancel '''
+    status = request.runningorder.status_end
+    if status not in ['running']:
+        return JsonResponse({'status': 'error', 'error': f'no action is to be taken on a order in a state {status}'})
     action = request.json_payload['action']
     if action == 'take':
         if request.runningorder.status_taken:
@@ -47,9 +50,8 @@ def post_merchant_change_order(request):
     elif action == 'accept cancel':
         if not request.runningorder.status_cancelling:
             return JsonResponse({'status': 'error', 'error': 'not cancelling'})
-        # TODO: make these atomic
-        deadorder_from_runningorder(request.runningorder, 'cancelled').save()
-        request.runningorder.delete()
+        request.runningorder.status_end = 'cancelled'
+        request.runningorder.save()
     return JsonResponse({'status': 'ok'})
 
 
@@ -76,3 +78,24 @@ def get_get_merchant_merchandise(request):
     return JsonResponse({'status': 'ok', 'data': [
         i.to_json_dict()
         for i in query_merchandise_user(request.user, per_page, page_number)]})
+
+
+@allow_methods(['GET'])
+@has_query_params(['per_page', 'page_number'])
+@login_required()
+@role_required('merchant')
+def get_search_merchant_order(request):
+    '''
+    get merchant orders
+    '''
+    per_page = int(request.GET.get('per_page'))
+    page_number = int(request.GET.get('page_number'))
+
+    # select * from runningorder where merchandise in (select * from merchandise where added_by_user == given_user);
+    queryset = RunningOrder.objects.filter(
+            merchandise__in=Merchandise.objects.filter(
+                added_by_user=request.user
+            )).order_by('added_date')
+    queryset = paginate_queryset(queryset, per_page, page_number)
+
+    return JsonResponse({'status': 'ok', 'data': [i.to_json_dict() for i in queryset]})

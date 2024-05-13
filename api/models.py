@@ -75,20 +75,7 @@ class FavoriteMerchandise(models.Model):
 
 
 class RunningOrder(models.Model):
-    ''' orders that's still going '''
-    # class OrderStatus(models.TextChoices):
-    #     # order created, but no payments is done
-    #     CREATED = 'CREATED', 'CREATED'
-    #     # the customer created and payed for the order
-    #     ISSUED = 'ISSUED', 'ISSUED'
-    #     # the order is taken by the merchant
-    #     TAKEN = 'TAKEN', 'TAKEN'
-    #     # the customer is cancelling the order
-    #     CANCELLING = 'CANCELLING', 'CANCELLING'
-    #     # the order is cancelled
-    #     CANCELLED = 'CANCELLED', 'CANCELLED'
-    #     # the order is finished
-    #     FINISHED = 'FINISHED', 'FINISHED'
+    ''' orders '''
     objects: models.Manager
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
@@ -100,6 +87,7 @@ class RunningOrder(models.Model):
     status_taken = models.BooleanField()
     # whether the customer wants to cancel the order
     status_cancelling = models.BooleanField()
+    status_end = models.CharField(max_length=64, default='running')
     added_date = models.DateTimeField("date added", auto_now_add=True)
 
     def to_json_dict(self):
@@ -113,42 +101,6 @@ class RunningOrder(models.Model):
                 'status_paid': self.status_paid,
                 'status_taken': self.status_taken,
                 'status_cancelling': self.status_cancelling,
+                'status_end': self.status_end,
                 'added_date': str(self.added_date),
                 }
-
-
-class DeadOrder(models.Model):
-    ''' orders that's finished for all sorts of reasons '''
-    objects: models.Manager
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    merchandise = models.ForeignKey(Merchandise, on_delete=models.CASCADE)
-    count = models.IntegerField()
-    total_price = models.FloatField()
-    # the order can be cancelled or finished
-    status = models.CharField(max_length=64)
-    running_added_date = models.DateTimeField("date added when it's running")
-    added_date = models.DateTimeField("date added", auto_now_add=True)
-
-    def to_json_dict(self):
-        return {
-                'id': str(self.id),
-                'username': self.user.username,
-                'user_id': str(self.user.id),
-                'merchandise_id': str(self.merchandise.id),
-                'count': self.count,
-                'total_price': self.total_price,
-                'status': self.status,
-                'running_added_date': str(self.running_added_date),
-                'added_date': str(self.added_date),
-                }
-
-
-def deadorder_from_runningorder(order: RunningOrder, status: str) -> DeadOrder:
-    return DeadOrder(
-            user=order.user,
-            merchandise=order.merchandise,
-            count=order.count,
-            total_price=order.total_price,
-            status=status,
-            running_added_date=order.added_date
-            )
