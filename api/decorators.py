@@ -160,7 +160,7 @@ def user_can_modify_runningorder():
             not_allowed = JsonResponse({'status': 'error', 'error': f'action {action} not allowed by your role {role}'}, status=HTTPStatus.BAD_REQUEST)
             allowed = {
                     'merchant': ['take', 'accept cancel'],
-                    'customer': ['pay', 'cancel'],
+                    'customer': ['pay', 'cancel', 'finish'],
                     }
             if action not in allowed[role]:
                 return not_allowed
