@@ -46,7 +46,7 @@ def role_required(role: str):
     def decor(func):
         def wrapper(request):
             if role != get_user_role(request.user.username):
-                return JsonResponse({'status': 'error', 'error': 'requring user role of role'}, status=HTTPStatus.UNAUTHORIZED)
+                return JsonResponse({'status': 'error', 'error': f'Unauthorized, requring user role of {role}'}, status=HTTPStatus.UNAUTHORIZED)
             return func(request)
         return wrapper
     return decor
