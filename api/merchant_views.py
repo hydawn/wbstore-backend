@@ -1,13 +1,12 @@
 ''' view func for merchant '''
 import base64
-from http import HTTPStatus
 
 from django.http import JsonResponse
 from django.core.files.base import ContentFile
 
 from .models import Merchandise, RunningOrder
 from .widgets import binarymd5, query_merchandise_user, paginate_queryset
-from .decorators import has_json_payload, login_required, allow_methods, \
+from .decorators import get_with_pages, has_json_payload, login_required, allow_methods, \
         role_required, runningorder_exist, user_can_view_runningorder, \
         user_can_modify_runningorder, has_query_params
 
@@ -57,6 +56,7 @@ def post_merchant_change_order(request):
 
 @allow_methods(['GET'])
 @has_query_params(['per_page', 'page_number'])
+@get_with_pages()
 @login_required()
 @role_required('merchant')
 def get_get_merchant_merchandise(request):
@@ -66,41 +66,32 @@ def get_get_merchant_merchandise(request):
     query username or merchandise_name
     count = 10 by default
     '''
-    try:
-        per_page = int(request.GET.get('per_page'))
-        page_number = int(request.GET.get('page_number'))
-    except ValueError as err:
-        return JsonResponse({
-                'status': 'error',
-                'error': f'value error on per_page or page_number: {err}'
-            },
-            status=HTTPStatus.BAD_REQUEST)
     return JsonResponse({'status': 'ok', 'data': [
         i.to_json_dict()
-        for i in query_merchandise_user(request.user, per_page, page_number)]})
+        for i in query_merchandise_user(request.user, request.per_page, request.page_number)]})
 
 
 @allow_methods(['GET'])
 @has_query_params(['per_page', 'page_number'])
+@get_with_pages()
 @login_required()
 @role_required('merchant')
 def get_search_merchant_order(request):
     '''
     get merchant orders
     '''
-    per_page = int(request.GET.get('per_page'))
-    page_number = int(request.GET.get('page_number'))
-
     # select * from runningorder where merchandise in (select * from merchandise where added_by_user == given_user);
     queryset = RunningOrder.objects.filter(
             merchandise__in=Merchandise.objects.filter(
                 added_by_user=request.user
             )).order_by('added_date')
     total_count = len(queryset)
-    queryset = paginate_queryset(queryset, per_page, page_number)
+    queryset, total_page, current_page = paginate_queryset(queryset, request.per_page, request.page_number)
     return JsonResponse({
         'status': 'ok',
         'data': {
             'order_list': [i.to_json_dict() for i in queryset],
+            'total_page': total_page,
+            'current_page': current_page,
             'total_count': total_count
         }})

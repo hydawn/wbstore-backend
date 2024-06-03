@@ -1,6 +1,7 @@
 __pycache__/
 images/
 *.sqlite3
+*.log
 
 api.md
 test-api.md

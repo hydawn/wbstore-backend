@@ -7,15 +7,20 @@ from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.decorators.csrf import get_token
 
+import logging
+
 from .decorators import has_json_payload, login_required, allow_methods, \
         merchandise_exist, role_required, runningorder_exist, \
         has_query_params, user_can_view_runningorder, \
-        user_can_modify_runningorder
+        user_can_modify_runningorder, get_with_pages
 
 from wbstorebackend.settings import DEBUG
 from .models import UserDetail, RunningOrder
-from .widgets import get_user_role, make_order_form, query_merchandise_name, \
-        paginate_queryset
+from .widgets import get_user_role, make_order_form, paginate_queryset, \
+        search_merchandise
+
+
+logger = logging.getLogger('django')
 
 
 class CsrfTokenAPI(View):
@@ -94,7 +99,8 @@ def post_logout(request):
 
 
 @allow_methods(['GET'])
-@has_query_params(['merchandise_name', 'per_page', 'page_number'])
+@has_query_params(['per_page', 'page_number'])
+@get_with_pages()
 @login_required()
 def get_search_merchandise(request):
     '''
@@ -103,15 +109,14 @@ def get_search_merchandise(request):
     query username or merchandise_name
     count = 10 by default
     '''
-    merchandise_name = request.GET.get('merchandise_name')
-    try:
-        per_page = int(request.GET.get('per_page'))
-        page_number = int(request.GET.get('page_number'))
-    except ValueError as err:
-        return JsonResponse({'status': 'error', 'error': f'value error on per_page or page_number: {err}'}, status=HTTPStatus.BAD_REQUEST)
-    return JsonResponse({'status': 'ok', 'data': [
-        i.to_json_dict()
-        for i in query_merchandise_name(merchandise_name, per_page, page_number)]})
+    logger.info('search merchandise with params: %s', request.GET)
+    queryset = search_merchandise(request.GET)
+    page, total_page, current_page = paginate_queryset(queryset, request.per_page, request.page_number)
+    return JsonResponse({'status': 'ok', 'data': {
+        'data_list': [i.to_json_dict() for i in page],
+        'current_page': current_page,
+        'total_page': total_page
+    }})
 
 
 @allow_methods(['POST'])
@@ -187,9 +192,12 @@ def get_search_customer_order(request):
     page_number = int(request.GET.get('page_number'))
     queryset = RunningOrder.objects.filter(user=request.user, status_incart=False).order_by('added_date')
     total_count = len(queryset)
-    queryset = paginate_queryset(queryset, per_page, page_number)
+    queryset, total_page, current_page = paginate_queryset(queryset, per_page, page_number)
     return JsonResponse({
         'status': 'ok',
         'data': {
                 'order_list': [i.to_json_dict() for i in queryset],
-                'total_count': total_count}})
+                'total_count': total_count,
+                'current_page': current_page,
+                'total_page': total_page
+            }})

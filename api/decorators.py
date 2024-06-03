@@ -171,3 +171,16 @@ def user_can_modify_runningorder():
             return func(request)
         return wrapper
     return decor
+
+
+def get_with_pages():
+    def decor(func):
+        def wrapper(request):
+            try:
+                request.per_page = int(request.GET.get('per_page', 4))
+                request.page_number = int(request.GET.get('page_number', 1))
+            except ValueError:
+                return JsonResponse({'error': 'per_page and page should be integer number'}, status=HTTPStatus.BAD_REQUEST)
+            return func(request)
+        return wrapper
+    return decor

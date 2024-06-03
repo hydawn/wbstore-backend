@@ -2,7 +2,7 @@ from http import HTTPStatus
 from django.http import JsonResponse
 
 from .models import RunningOrder
-from .decorators import has_json_payload, login_required, allow_methods, \
+from .decorators import get_with_pages, has_json_payload, login_required, allow_methods, \
         merchandise_exist, role_required, runningorder_exist, \
         has_query_params, user_can_view_runningorder, \
         user_can_modify_runningorder
@@ -27,20 +27,21 @@ def post_add_to_shopping_cart(request):
 
 @allow_methods(['GET'])
 @has_query_params(['per_page', 'page_number'])
+@get_with_pages()
 @login_required()
 @role_required('customer')
 def get_get_shopping_cart(request):
     ''' return a list of merch '''
     query_set = RunningOrder.objects.filter(user=request.user, status_incart=True).order_by('added_date')
     total_count = len(query_set)
-    per_page = int(request.GET.get('per_page'))
-    page_number = int(request.GET.get('page_number'))
-    query_set = paginate_queryset(query_set, per_page, page_number)
+    query_set, total_page, current_page = paginate_queryset(query_set, request.per_page, request.page_number)
     return JsonResponse({
         'status': 'ok',
         'data': {
             'cart_list': [i.to_json_dict() for i in query_set],
-            'total_count': total_count
+            'total_count': total_count,
+            'total_page': total_page,
+            'current_page': current_page
         }})
 
 
